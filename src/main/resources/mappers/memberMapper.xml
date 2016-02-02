@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.bfo.persistence.MemberDAO">
+
+<insert id="createAccount">
+ insert into tbl_member(mno, usermail, userpw, nickname)
+values(seq_member.nextval, #{userMail, jdbcType=VARCHAR}, #{userPw, jdbcType=VARCHAR}, #{nickName, jdbcType=VARCHAR})
+</insert>
+
+<select id="login" resultType="MemberVO">
+select mno, usermail, userpw, nickname from tbl_member
+where usermail = #{userMail, jdbcType=VARCHAR} and userpw = #{userPw, jdbcType=VARCHAR}
+</select>
+</mapper>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.bfo.persistence.NoticeDAO">
+  
+  <select id="list" resultType="NoticeVO">
+	<![CDATA[
+	select rn, nno, title, content, m.mno mno, nickname, regdate, updatedate, viewcnt, highlight 
+	from
+		(
+		select 
+		/*+index_desc(tbl_notice pk_nno)*/
+		rownum rn, nno, title, content , mno, regdate, updatedate, viewcnt, highlight
+		from tbl_notice 
+		where nno > 0 
+	]]>
+    <![CDATA[
+    	and rownum <= #{page} * #{perPageNum} order by highlight desc, nno desc
+  		)n, tbl_member m
+ 	where n.mno = m.mno and rn > (#{page} - 1) * #{perPageNum}
+  	]]>
+  </select>
+  
+  <select id="listCount" resultType="int">
+  	<![CDATA[
+	select count(nno) from tbl_notice
+    ]]>
+  </select>
+  
+  <insert id="create">
+  	insert into tbl_notice (nno, title, content, mno, highlight) 
+  	values(seq_notice.nextval, #{title, jdbcType=VARCHAR}, #{content, jdbcType=VARCHAR}, 
+  	#{mno, jdbcType=NUMERIC}, #{highlight, jdbcType=NUMERIC})
+  </insert>
+  
+  <select id="read" resultType="NoticeVO">
+    select nno, title, content, m.mno mno, nickname, regdate, updatedate, viewcnt, highlight 
+    from tbl_notice n, (select mno, nickname from tbl_member)m where n.mno = m.mno and n.nno = #{nno}
+  </select>
+
+  <update id="update">
+    update tbl_notice set title=#{title, jdbcType=VARCHAR}, content=#{content, jdbcType=VARCHAR}, 
+	highlight=#{highlight, jdbcType=VARCHAR}
+	where nno = #{nno}
+  </update>
+  
+  <delete id="delete">
+  	delete from tbl_notice where nno = #{nno}
+  </delete>
+  
+  <update id="updateViewCnt">
+  	update tbl_notice set viewcnt=viewcnt+1 where nno = #{nno}
+  </update>
+
+</mapper>

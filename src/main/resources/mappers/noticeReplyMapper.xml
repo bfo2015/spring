@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.bfo.persistence.NoticeReplyDAO">
+
+	<select id="list" resultType="NoticeReplyVO">
+		select rno, nno, replytext, mno, regdate, updatedate from tbl_noticereply where nno = #{nno}
+	</select>
+	
+	<insert id="create">
+		insert into tbl_noticereply(rno, nno, replytext, mno)
+		values(seq_noticereply.nextval, #{nno}, #{replyText, jdbcType=VARCHAR}, #{mno})
+	</insert>
+	
+	<update id="update">
+		update tbl_noticereply set replytext=#{replyText, jdbcType=VARCHAR}, updatedate=sysdate where rno = #{rno}
+	</update>
+	
+	<delete id="delete">
+		delete from tbl_noticereply where rno = #{rno}
+	</delete>
+	
+	<select id="listPage" resultType="NoticeReplyVO">
+	<![CDATA[
+    select rn, rno, nno, replytext, m.mno mno, nickname, regdate, updatedate from
+   		(
+	    select
+	    /*+index_desc(tbl_noticereply pk_rno)*/
+	    rownum rn, rno, nno, replytext, mno, regdate, updatedate from tbl_noticereply
+	    where nno = #{nno}
+	    and rownum <= #{page} * #{perPageNum}
+	]]>
+    <![CDATA[
+	    )r, tbl_member m
+	where r.mno = m.mno and rn > (#{page}-1)* #{perPageNum}
+    ]]>
+	</select>
+	
+	<select id="count" resultType="int">
+		select count(rno) from tbl_noticereply where nno = #{nno}
+	</select>
+	
+</mapper>

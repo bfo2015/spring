@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.bfo.persistence.PollDAO">
+  
+    <select id="list" resultType="PollVO">
+   <![CDATA[
+   select * from
+      (
+      
+      select 
+      /*+index_desc(tbl_poll pk_pno)*/
+      rownum rn, pno, polladdr, topic , intro, startdate, enddate, mno, categorycode,
+      answercode, multiopt, publiccode, pollpw, logincode, 
+       regdate, updatedate,status
+      from tbl_poll 
+      where pno > 0 and mno = #{mno} and topic is not null
+   ]]>
+    
+    <![CDATA[
+       and rownum <= #{page} * #{perPageNum}
+        )
+    where rn > (#{page} - 1) * #{perPageNum}
+     ]]>
+
+  </select>
+  
+  <select id="listCount" resultType="int">
+     
+     <![CDATA[
+   select count(pno) from tbl_poll where mno = #{mno} and topic is not null
+    ]]>
+    
+  
+  </select>
+  
+<!--   <select id="list" resultType="PollVO">
+   <![CDATA[
+   select * from
+      (
+      select 
+      /*+index_desc(tbl_poll pk_pno)*/
+      rownum rn, pno, polladdr, topic , intro, startdate, enddate, mno, categorycode,
+      answercode, multiopt, publiccode, pollpw, closecode, closenum, logincode, viewcnt,
+      pollcnt, regdate, updatedate
+      from tbl_poll 
+      where pno > 0  p
+   ]]>
+
+    <if test="searchType != null">
+     <if test="searchType eq 't'.toString()">
+     and p.topic like '%'||#{keyword}||'%'
+     </if>
+     <if test="searchType eq 'n'.toString()">
+     , (select mno from tbl_member where nickname like '%'||#{keyword}||'%') m
+     where p.mno = m.mno
+     </if>
+     <if test="searchType eq 'tn'.toString()">
+     , (select mno from tbl_member where nickname like '%'||#{keyword}||'%') m
+     where p.mno = m.mno or p.topic like '%'||#{keyword}||'%' 
+     </if>
+    </if>
+    
+    <![CDATA[
+       and p.rn <= #{page} * #{perPageNum}
+        )
+    where p.rn > (#{page} - 1) * #{perPageNum}
+     ]]>
+
+  </select> -->
+  
+<!--   <select id="listCount" resultType="int">
+     <![CDATA[
+   select count(pno) from tbl_poll where pno > 0
+    ]]>
+    
+    <if test="searchType != null">
+     <if test="searchType eq 't'.toString()">
+     and title like '%'||#{keyword}||'%'
+     </if>
+     <if test="searchType eq 'w'.toString()">
+     and writer like '%'||#{keyword}||'%'
+     </if>
+     <if test="searchType eq 'tw'.toString()">
+     and (title like '%'||#{keyword}||'%' or writer like '%'||#{keyword}||'%') 
+     </if>
+    </if>
+  </select> -->
+  
+  <insert id="create">
+     insert into tbl_poll
+     (pno, polladdr, topic, intro, startdate, enddate, mno, categorycode,
+      answercode, multiopt, publiccode, pollpw,  logincode) values
+     (#{pno}, '/poll/'||to_char(#{pno}), #{topic, jdbcType=VARCHAR}, #{intro, jdbcType=VARCHAR}, #{startDate, jdbcType=DATE}, #{endDate, jdbcType=DATE}, #{mno , jdbcType=NUMERIC},
+      #{categoryCode, jdbcType=VARCHAR}, #{answerCode, jdbcType=VARCHAR}, #{multiOpt, jdbcType=CHAR}, #{publicCode, jdbcType=VARCHAR}, #{pollPw , jdbcType=VARCHAR},  #{loginCode, jdbcType=VARCHAR})
+  </insert>
+  
+  <select id="read" resultType="PollVO">
+    select PNO,POLLADDR,TOPIC,INTRO,STARTDATE,ENDDATE,MNO,ca.categoryname categoryCode,ANSWERCODE,MULTIOPT,PUBLICCODE,
+   POLLPW,LOGINCODE,REGDATE,UPDATEDATE,status
+   from tbl_attrcategory ca,
+   (select 
+   *
+   from tbl_poll where pno = #{pno}) poll
+   where poll.categorycode = ca.categorycode
+</select>
+
+  
+  <update id="update">
+    update tbl_poll set
+    topic = #{topic, jdbcType=VARCHAR},
+    intro = #{intro, jdbcType=VARCHAR},
+    validation = #{validation,jdbcType=VARCHAR}
+    where pno = #{pno}
+  </update>
+  
+  <delete id="delete">
+     delete from tbl_poll where pno = #{pno}
+  </delete>
+  
+  <select id="setting" resultType="PollVO">
+    select * from tbl_poll where pno = #{pno}
+  </select>
+  
+  <select id="categoryList" resultType="CategoryVO">
+  <![CDATA[
+    select p.pno categoryno, p.categorycode, categoryname
+   from
+   (
+   select pno, categorycode from tbl_poll where pno<99
+   ) p ,
+   tbl_attrcategory c
+   where p.categorycode = c.categorycode
+   ]]>
+  </select>
+  
+  <select id="newPno" resultType="int">
+     select seq_poll.nextval from dual
+  </select>
+  
+  <update id="createupt">
+     update tbl_poll set
+   topic = #{topic, jdbcType=VARCHAR},
+   intro = #{intro, jdbcType=VARCHAR},
+   startdate = sysdate,
+   regdate = sysdate
+   where pno = #{pno}
+  </update>
+  
+  <insert id="addAttach">
+    insert into tbl_attrattach(fullname, pno, pnofileno) values (#{fullName}, #{pno}, #{pnoFileNo})
+  </insert>
+
+  <insert id="addItem">
+    insert into tbl_attrselectitem(selectitemno, selectitem, pno, pnoitemno)
+   values(seq_attrselectitem.nextval, #{selectItem}, #{pno}, #{pnoItemNo})
+  </insert>
+  
+  <select id="readAttach" resultType="FileVO">
+     select fullname, pno, pnofileno from tbl_attrattach where pno=#{pno}
+  </select>
+  
+  <select id="readItem" resultType="TextVO">
+     select selectitemno, selectitem, pno, pnoitemno from tbl_attrselectitem where pno=#{pno}
+  </select>
+
+  <delete id="deleteFile">
+  	delete tbl_attrattach where pno = #{pno}
+  </delete>
+  
+  <delete id="deleteItem">
+  	delete TBL_ATTRSELECTITEM where pno = #{pno}
+  </delete>
+  
+  <select id="checkFile" resultType="int">
+  	select count(fullname) from tbl_attrattach where pno = #{pno}
+  </select>
+  
+  <select id="checkItem" resultType="int">
+  	select count(selectitemno) from tbl_attrselectitem where pno = #{pno}
+  </select>
+  
+  <select id="readAll" resultType="AllVO">
+    select PNO,POLLADDR,TOPIC,INTRO,STARTDATE,ENDDATE,MNO,ca.categoryname categoryCode,ANSWERCODE,MULTIOPT,PUBLICCODE,
+   POLLPW,LOGINCODE,REGDATE,UPDATEDATE,status,validation
+   from tbl_attrcategory ca,
+   (select 
+   *
+   from tbl_poll where pno = #{pno}) poll
+   where poll.categorycode = ca.categorycode
+</select>
+  
+</mapper>

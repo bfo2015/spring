@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.bfo.persistence.QnaDAO">
+
+	<select id="qnaList" resultType="QnaVO">
+	<![CDATA[
+	select rn,qnano,title,content,m.NICKNAME,pw,updatedate,regdate from 
+	(
+	select 
+	/*+index_desc(tbl_qnaboard pk_qna)*/
+	rownum rn,qnano,title,content,updatedate,regdate,mno,pw from tbl_qnaboard where qnano>0 and rownum <=#{page} * #{perPageNum} order by qnano desc)q, tbl_member m
+	where q.mno=m.mno
+	and rn>(#{page}-1) * #{perPageNum}
+	]]>
+	</select>
+	
+	<select id="qnaCount" resultType="int">
+	select count(*) from tbl_qnaboard
+	</select>
+
+	<insert id="create">
+	<![CDATA[
+	insert into tbl_qnaboard(QNANO,MNO,title,content,pw)
+	values(seq_qna.nextval,#{mno},#{title},#{content},#{pw,jdbcType=INTEGER})
+	]]>
+	</insert>
+
+	<update id="update">
+	update tbl_qnaboard
+	set title=#{title},CONTENT=#{content},UPDATEDATE=sysdate,PW=#{pw,jdbcType=INTEGER}
+	where QNANO=#{qnano}
+	
+	</update>
+
+	<select id="read" resultType="QnaVO">
+	select rn,qnano,title,content,m.NICKNAME,pw,updatedate,regdate from 
+	(
+	select 
+	/*+index_desc(tbl_qnaboard pk_qna)*/
+	rownum rn,qnano,title,content,updatedate,regdate,mno,pw from tbl_qnaboard where qnano>0 order by qnano desc)q, tbl_member m
+	where q.mno=m.mno
+	and qnano=#{qnano}
+	</select>
+	
+	<delete id="delete">
+	delete from tbl_qnaboard where qnano=#{qnano}
+	</delete>
+</mapper>

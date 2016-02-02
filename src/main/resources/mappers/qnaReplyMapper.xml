@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+  <mapper namespace="org.bfo.persistence.QnaReplyDAO">
+  
+  <select id="list" resultType="org.bfo.domain.QnaReplyVO">
+  select * from tbl_reply where bno =#{bno} and rno > 0 order by rno desc
+  
+  </select>
+  
+  <select id="listpage" resultType="org.bfo.domain.QnaReplyVO">
+ <![CDATA[
+	 select rn,rno, qnano, replytext,m.NICKNAME replyer,m.mno,regdate, updatedate
+	from
+	(select rownum rn,rno, qnano, replytext, mno ,regdate, updatedate from tbl_qnareply where rno>0  and qnano=#{qnano} and rownum<#{cri.perPageNum}*#{cri.page} 
+	order by RNO desc) re, tbl_member m
+	where re.mno = m.mno and rn> #{cri.perPageNum}*(#{cri.page}-1)
+	 
+   ]]>
+  </select>
+  
+  <select id="count" resultType="int">
+  
+  select count(*) from tbl_qnareply where qnano = #{qnano}
+  
+  </select>
+  
+  
+  <insert id="create">
+  <![CDATA[
+  insert into tbl_qnareply(rno,qnano,replytext, mno)
+values(seq_rep.nextval,#{qnano},#{replyText},#{mno})
+  ]]>
+  </insert>
+  
+  <update id="modify">
+  
+  update tbl_qnareply set replytext = #{replyText} where rno = #{rno}
+  
+  </update>
+  
+  <delete id="delete">
+  delete from tbl_qnareply where rno=#{rno}
+  </delete>
+  
+  </mapper>
